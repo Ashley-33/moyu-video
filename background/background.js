@@ -340,10 +340,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return true;
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-  if (changeInfo.status === 'loading') {
-    chrome.storage.session.remove('moyu_' + tabId).catch(() => {});
-  }
+// 页面开始加载（刷新/导航）：把 active 覆盖层转为"可恢复"，留待 popup 询问是否恢复
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+  if (changeInfo.status !== 'loading') return;
+  try {
+    const key = 'moyu_' + tabId;
+    const d = await chrome.storage.session.get(key);
+    const st = d[key];
+    if (!st) return;
+    if (st.status === 'active') {
+      st.status = 'recoverable';
+      await chrome.storage.session.set({ [key]: st });
+    } else if (st.status === 'picking') {
+      await chrome.storage.session.remove(key); // 拾取中途刷新，直接丢弃
+    }
+    // recoverable 状态保留，由 popup 校验是否同页并清理
+  } catch (e) {}
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {

@@ -36,6 +36,7 @@ if (!window.__MOYU_CONTENT__) {
           state: {
             status: state.status, videoUrl: state.videoUrl, backupUrls: state.backupUrls,
             muted: state.muted, volume: state.volume, opacity: state.opacity, next: state.next,
+            selectorPath: state.selectorPath, autoNext: state.autoNext, pageUrl: location.href,
           },
         });
       } catch (e) {
@@ -414,6 +415,32 @@ if (!window.__MOYU_CONTENT__) {
           enterPicker();
           sendResponse({ ok: true });
           break;
+        case 'RESTORE_OVERLAY': {
+          // 刷新后恢复：按记录的选择器路径找回目标，直接盖回去（跳过拾取）
+          state.videoUrl = msg.videoUrl;
+          state.backupUrls = msg.backupUrls || [];
+          state.next = msg.next || null;
+          state.selectorPath = msg.selectorPath || null;
+          if (msg.settings) {
+            if (typeof msg.settings.volume === 'number') state.volume = clamp01(msg.settings.volume);
+            if (typeof msg.settings.opacity === 'number') state.opacity = msg.settings.opacity;
+            if (typeof msg.settings.autoNext === 'boolean') state.autoNext = msg.settings.autoNext;
+          }
+          state.muted = true;
+          var rel = msg.selectorPath ? safeQuery(msg.selectorPath) : null;
+          if (rel && rel.isConnected) {
+            exitPicker();
+            removeOverlay();
+            state.target = rel;
+            createOverlay(rel);
+            state.status = 'active';
+            report();
+            sendResponse({ ok: true });
+          } else {
+            sendResponse({ ok: false, reason: 'notfound' });
+          }
+          break;
+        }
         case 'STOP':
           stopAll();
           sendResponse({ ok: true });

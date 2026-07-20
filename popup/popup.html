@@ -49,6 +49,15 @@
       <button id="cancel" class="btn stop">取消拾取</button>
     </section>
 
+    <!-- 刷新后可恢复 -->
+    <section id="s-recover" class="panel" hidden>
+      <p class="tip big">🔄 检测到刷新前的视频</p>
+      <p class="tip">要按原来的位置重新盖回去吗？</p>
+      <button id="recover" class="btn primary">恢复播放</button>
+      <button id="recover-skip" class="btn">算了，重新开始</button>
+      <p id="err-rec" class="err"></p>
+    </section>
+
     <!-- 覆盖播放中 -->
     <section id="s-active" class="panel" hidden>
       <p class="tip big">覆盖播放中 ▶</p>

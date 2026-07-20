@@ -5,6 +5,7 @@ const $ = (s) => document.querySelector(s);
 let tab = null;
 let settings = { volume: 0.6, opacity: 1, autoNext: true }; // 记忆到 storage.local
 let isMuted = true;
+let recoverState = null; // 刷新后待恢复的状态
 
 async function getActiveTab() {
   const [t] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -20,7 +21,7 @@ function isRestricted(url) {
 }
 
 function show(id) {
-  for (const s of ['restricted', 'idle', 'picking', 'active']) {
+  for (const s of ['restricted', 'idle', 'picking', 'active', 'recover']) {
     const el = $('#s-' + s);
     if (el) el.hidden = s !== id;
   }
@@ -28,6 +29,11 @@ function show(id) {
 
 function setErr(m) {
   const el = $('#err');
+  if (el) el.textContent = m || '';
+}
+
+function setErrRec(m) {
+  const el = $('#err-rec');
   if (el) el.textContent = m || '';
 }
 
@@ -231,6 +237,47 @@ async function setupBossKey() {
   } catch (e) { /* ignore */ }
 }
 
+// 刷新后恢复：注入 content，按记录的选择器路径把视频盖回原位
+async function doRecover() {
+  setErrRec('');
+  if (!recoverState) { show('idle'); return; }
+  let res;
+  try {
+    res = await ensureContentAndSend({
+      type: 'RESTORE_OVERLAY',
+      videoUrl: recoverState.videoUrl,
+      backupUrls: recoverState.backupUrls,
+      next: recoverState.next,
+      selectorPath: recoverState.selectorPath,
+      settings: {
+        volume: recoverState.volume,
+        opacity: recoverState.opacity,
+        autoNext: recoverState.autoNext,
+      },
+    });
+  } catch (e) {
+    setErrRec(e.message || '恢复失败');
+    return;
+  }
+  if (res && res.ok) {
+    let pb = null;
+    try { pb = await chrome.tabs.sendMessage(tab.id, { type: 'GET_PLAYBACK' }); } catch (e) { /* ignore */ }
+    show('active');
+    setupControls(pb);
+  } else {
+    await bg({ type: 'CLEAR_STATE', tabId: tab.id });
+    recoverState = null;
+    setErr('原来的位置找不到了（页面可能变了），请重新开始');
+    show('idle');
+  }
+}
+
+async function skipRecover() {
+  await bg({ type: 'CLEAR_STATE', tabId: tab.id });
+  recoverState = null;
+  show('idle');
+}
+
 async function init() {
   // 顶部动态显示当前版本号（每次更新 bump manifest version 即可）
   const verEl = document.querySelector('.ver');
@@ -256,7 +303,12 @@ async function init() {
     setupControls(pb);
   } else if (status === 'picking') {
     show('picking');
+  } else if (status === 'recoverable' && st.pageUrl && tab.url === st.pageUrl && st.videoUrl && st.selectorPath) {
+    // 同一页刷新，提供恢复
+    recoverState = st;
+    show('recover');
   } else {
+    if (status === 'recoverable') await bg({ type: 'CLEAR_STATE', tabId: tab.id }); // 已导航到别处，清掉
     show('idle');
   }
 
@@ -267,6 +319,8 @@ async function init() {
   $('#reselect').addEventListener('click', reselect);
   $('#swapbtn').addEventListener('click', swap);
   $('#url2').addEventListener('keydown', (e) => { if (e.key === 'Enter') swap(); });
+  $('#recover').addEventListener('click', doRecover);
+  $('#recover-skip').addEventListener('click', skipRecover);
 }
 
 init();
