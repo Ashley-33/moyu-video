@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="referrer" content="no-referrer" />
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #stage { position: absolute; inset: 0; }
+    video { width: 100%; height: 100%; display: block; background: #000; object-fit: contain; cursor: pointer; }
+    .msg {
+      color: #9aa0a6; font: 13px/1.6 system-ui, sans-serif; text-align: center; padding: 12px;
+      position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%);
+    }
+
+    /* hover 才现的极简控制条 */
+    .bar {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 8px; box-sizing: border-box;
+      background: linear-gradient(to top, rgba(0, 0, 0, .6), rgba(0, 0, 0, 0));
+      opacity: 0; transition: opacity .15s;
+      font: 12px system-ui, sans-serif; color: #fff;
+    }
+    #stage:hover .bar { opacity: 1; }
+    .bar button {
+      background: none; border: 0; color: #fff; cursor: pointer;
+      font-size: 15px; line-height: 1; padding: 2px; flex: none;
+    }
+    .bar input[type="range"] { accent-color: #fff; cursor: pointer; height: 4px; margin: 0; min-width: 0; }
+    /* 进度条：优先撑开、保底 48px，永不被挤成一个点 */
+    .bar .prog { flex: 1 1 60px; min-width: 48px; display: flex; align-items: center; }
+    .bar .prog input[type="range"] { width: 100%; display: block; }
+    /* 音量条：空间紧张时先让位（可收缩到 0） */
+    .bar .vol { flex: 0 1 60px; width: 60px; min-width: 0; }
+    .bar .time { flex: none; font-variant-numeric: tabular-nums; opacity: .9; white-space: nowrap; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div id="stage"><div class="msg">正在加载视频…</div></div>
+  <script src="player.js"></script>
+</body>
+</html>

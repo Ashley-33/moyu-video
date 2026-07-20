@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">摸鱼视频 <span class="ver">M3</span></div>
+
+    <!-- 受限页面 + 介绍/帮助 -->
+    <section id="s-restricted" class="panel" hidden>
+      <p class="tip">🚫 当前页面不支持（浏览器内置页 / 应用商店等受限页面）。<br />请切到一个<b>普通网页</b>再打开我。</p>
+
+      <div class="help">
+        <p class="help-title">🐟 这是什么</p>
+        <p class="tip">把 B站 / 小红书的视频，伪装覆盖到网页里的图片/视频位置上——边办公边摸鱼，隐蔽为先。</p>
+
+        <p class="help-title">⚡ 三步上手</p>
+        <ol class="steps">
+          <li>打开一个普通网页（新闻 / 知乎 / 微博…）</li>
+          <li>粘贴视频链接，点「开始」</li>
+          <li>在网页上点一张图，视频就盖上去了</li>
+        </ol>
+
+        <p class="help-title">💡 小技巧</p>
+        <ul class="steps">
+          <li>老板键 <b class="boss-key">Alt+Shift+H</b>：一键藏 / 显视频</li>
+          <li>默认静音、可调透明度，隐蔽第一</li>
+          <li>支持 B站（含免费番剧）· 小红书 · 红果短剧</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 输入链接 -->
+    <section id="s-idle" class="panel" hidden>
+      <label class="lbl">视频链接（B站 / 小红书 / 红果短剧）</label>
+      <input id="url" type="text" placeholder="B站 · 小红书 · 红果短剧 链接都能贴" />
+      <button id="start" class="btn primary">开始</button>
+      <p class="tip">支持 B站、<b>小红书</b>、<b>红果短剧</b>（小红书为实验性，可能失效）。点「开始」后在网页上悬停点选一个占位元素盖上去，按 <b>Esc</b> 取消。</p>
+      <p id="err" class="err"></p>
+    </section>
+
+    <!-- 拾取中 -->
+    <section id="s-picking" class="panel" hidden>
+      <p class="tip big">已进入拾取模式 🎯</p>
+      <p class="tip">回到网页，悬停并<b>点击</b>一个占位元素（图片 / 视频 / ≥200×150 的方块）。按 <b>Esc</b> 也可取消。</p>
+      <button id="cancel" class="btn stop">取消拾取</button>
+    </section>
+
+    <!-- 覆盖播放中 -->
+    <section id="s-active" class="panel" hidden>
+      <p class="tip big">覆盖播放中 ▶</p>
+
+      <button id="mute" class="btn ghost">🔇 取消静音</button>
+
+      <div class="row">
+        <span class="rlbl">音量</span>
+        <input id="vol" type="range" min="0" max="100" value="60" />
+      </div>
+      <div class="row">
+        <span class="rlbl">透明度</span>
+        <input id="op" type="range" min="50" max="100" value="100" />
+      </div>
+
+      <label class="check"><input type="checkbox" id="autonext" /> 自动播下一集（红果剧集 / B站分P）</label>
+
+      <div class="swaprow">
+        <input id="url2" type="text" placeholder="粘贴新链接，直接更换（免还原）" />
+        <button id="swapbtn" class="btn">更换</button>
+      </div>
+      <p id="err2" class="err"></p>
+
+      <button id="reselect" class="btn">重新选择位置</button>
+      <button id="restore" class="btn stop">还原页面</button>
+
+      <p class="tip">老板键 <b class="boss-key">Alt+Shift+H</b>：一键藏/显视频（可在 <span class="mono">chrome://extensions/shortcuts</span> 改键）。</p>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

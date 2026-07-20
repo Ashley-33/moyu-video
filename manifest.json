@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "摸鱼视频",
+  "version": "0.5.0",
+  "description": "在任意网页上伪装式观看视频（B站）——把视频覆盖到页面已有的图片/视频占位上。",
+  "permissions": ["activeTab", "scripting", "storage", "declarativeNetRequest"],
+  "optional_host_permissions": [
+    "*://b23.tv/*",
+    "*://*.bilibili.com/*",
+    "*://*.bilivideo.com/*",
+    "*://*.xiaohongshu.com/*",
+    "*://xhslink.com/*",
+    "*://*.xhscdn.com/*",
+    "*://*.hongguoduanju.com/*"
+  ],
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "摸鱼视频",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "commands": {
+    "toggle-boss": {
+      "suggested_key": {
+        "default": "Alt+Shift+H",
+        "mac": "Command+Shift+H"
+      },
+      "description": "老板键：一键藏/显视频"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["player/player.html", "player/player.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
