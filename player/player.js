@@ -189,5 +189,15 @@
   stage.appendChild(v);
   stage.appendChild(bar);
   syncVolUI();
+
+  // 覆盖层太小时：控制条精简为"只有完整进度条"，其余请到扩展弹窗设置
+  bar.title = '点画面可播放/暂停 · 音量、透明度请点扩展「摸」图标设置';
+  function applyCompact() {
+    const w = document.documentElement.clientWidth || window.innerWidth || 0;
+    document.body.classList.toggle('compact', w < 280);
+  }
+  applyCompact();
+  window.addEventListener('resize', applyCompact);
+
   load(0);
 })();

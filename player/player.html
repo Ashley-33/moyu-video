@@ -33,6 +33,13 @@
     /* 音量条：空间紧张时先让位（可收缩到 0） */
     .bar .vol { flex: 0 1 60px; width: 60px; min-width: 0; }
     .bar .time { flex: none; font-variant-numeric: tabular-nums; opacity: .9; white-space: nowrap; font-size: 11px; }
+
+    /* 覆盖层太小时：只保留完整进度条，播放/暂停点画面即可，音量等去扩展弹窗设置 */
+    body.compact .bar { padding: 4px 6px; gap: 0; }
+    body.compact .bar > button,
+    body.compact .bar .time,
+    body.compact .bar .vol { display: none; }
+    body.compact .bar .prog { flex: 1 1 auto; }
   </style>
 </head>
 <body>
