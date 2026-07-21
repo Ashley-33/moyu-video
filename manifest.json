@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "摸鱼视频",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "在任意网页上伪装式观看视频（B站）——把视频覆盖到页面已有的图片/视频占位上。",
   "permissions": ["activeTab", "scripting", "storage", "declarativeNetRequest"],
   "optional_host_permissions": [

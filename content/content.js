@@ -11,7 +11,7 @@ if (!window.__MOYU_CONTENT__) {
     const state = {
       status: 'idle', videoUrl: null, backupUrls: null, target: null,
       muted: true, volume: 0.6, opacity: 1, bossHidden: false, selectorPath: null,
-      next: null, autoNext: true,
+      next: null, autoNext: true, currentTime: 0,
     };
 
     let hostEl = null;   // 光 DOM 宿主
@@ -37,6 +37,7 @@ if (!window.__MOYU_CONTENT__) {
             status: state.status, videoUrl: state.videoUrl, backupUrls: state.backupUrls,
             muted: state.muted, volume: state.volume, opacity: state.opacity, next: state.next,
             selectorPath: state.selectorPath, autoNext: state.autoNext, pageUrl: location.href,
+            currentTime: state.currentTime,
           },
         });
       } catch (e) {
@@ -335,7 +336,9 @@ if (!window.__MOYU_CONTENT__) {
         chrome.runtime.getURL('player/player.html') +
         '?v=' + encodeURIComponent(state.videoUrl) +
         '&b=' + encodeURIComponent(b) +
-        '&vol=' + encodeURIComponent(state.volume);
+        '&vol=' + encodeURIComponent(state.volume) +
+        '&muted=' + (state.muted ? '1' : '0') +
+        '&t=' + encodeURIComponent(Math.floor(state.currentTime || 0));
     }
 
     // 播完接力下一条（仅当开启自动 且有下一条），接不下去就停在当前
@@ -351,6 +354,7 @@ if (!window.__MOYU_CONTENT__) {
         state.backupUrls = res.backupUrls || [];
         state.next = res.next || null;
         state.muted = true;
+        state.currentTime = 0;
         setPlayerSrc();
         report();
       });
@@ -406,12 +410,21 @@ if (!window.__MOYU_CONTENT__) {
           state.videoUrl = msg.videoUrl;
           state.backupUrls = msg.backupUrls || [];
           state.next = msg.next || null;
-          if (msg.settings) {
-            if (typeof msg.settings.volume === 'number') state.volume = clamp01(msg.settings.volume);
-            if (typeof msg.settings.opacity === 'number') state.opacity = msg.settings.opacity;
-            if (typeof msg.settings.autoNext === 'boolean') state.autoNext = msg.settings.autoNext;
+          if (msg.keepPlayback) {
+            // 重新选择位置：保留当前音量/静音/进度；透明度、自动仍跟随设置
+            if (msg.settings) {
+              if (typeof msg.settings.opacity === 'number') state.opacity = msg.settings.opacity;
+              if (typeof msg.settings.autoNext === 'boolean') state.autoNext = msg.settings.autoNext;
+            }
+          } else {
+            if (msg.settings) {
+              if (typeof msg.settings.volume === 'number') state.volume = clamp01(msg.settings.volume);
+              if (typeof msg.settings.opacity === 'number') state.opacity = msg.settings.opacity;
+              if (typeof msg.settings.autoNext === 'boolean') state.autoNext = msg.settings.autoNext;
+            }
+            state.muted = true; // 声音安全：全新起播都静音
+            state.currentTime = 0;
           }
-          state.muted = true; // 声音安全：每次起播都静音
           enterPicker();
           sendResponse({ ok: true });
           break;
@@ -427,6 +440,7 @@ if (!window.__MOYU_CONTENT__) {
             if (typeof msg.settings.autoNext === 'boolean') state.autoNext = msg.settings.autoNext;
           }
           state.muted = true;
+          state.currentTime = typeof msg.currentTime === 'number' ? msg.currentTime : 0;
           var rel = msg.selectorPath ? safeQuery(msg.selectorPath) : null;
           if (rel && rel.isConnected) {
             exitPicker();
@@ -455,6 +469,7 @@ if (!window.__MOYU_CONTENT__) {
           state.backupUrls = msg.backupUrls || [];
           state.next = msg.next || null;
           state.muted = true;
+          state.currentTime = 0;
           if (state.status === 'active' && iframeEl) setPlayerSrc();
           report();
           sendResponse({ ok: true });
@@ -503,6 +518,7 @@ if (!window.__MOYU_CONTENT__) {
       if (d.type === 'STATE') {
         if (typeof d.muted === 'boolean') state.muted = d.muted;
         if (typeof d.volume === 'number') state.volume = d.volume;
+        if (typeof d.currentTime === 'number') state.currentTime = d.currentTime;
         report();
       } else if (d.type === 'ENDED') {
         advanceNext();

@@ -142,6 +142,7 @@ async function reselect() {
       videoUrl: videoUrl,
       backupUrls: st.backupUrls,
       next: st.next || null,
+      keepPlayback: true, // 重选位置：保留声音设置 + 播放进度
       settings: settings,
     });
   } catch (e) {
@@ -249,6 +250,7 @@ async function doRecover() {
       backupUrls: recoverState.backupUrls,
       next: recoverState.next,
       selectorPath: recoverState.selectorPath,
+      currentTime: recoverState.currentTime,
       settings: {
         volume: recoverState.volume,
         opacity: recoverState.opacity,

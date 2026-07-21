@@ -10,6 +10,9 @@
   let vol = parseFloat(p.get('vol'));
   if (isNaN(vol)) vol = 0.6;
   vol = Math.max(0, Math.min(1, vol));
+  const wantMuted = p.get('muted') !== '0'; // 期望的静音状态（默认静音）
+  let startAt = parseFloat(p.get('t'));      // 起播位置（秒），用于重选位置/刷新恢复续播
+  if (isNaN(startAt) || startAt < 0) startAt = 0;
 
   const stage = document.getElementById('stage');
   if (!videoUrl) {
@@ -70,7 +73,10 @@
   }
   function postState() {
     try {
-      window.parent.postMessage({ __moyu: true, type: 'STATE', muted: v.muted, volume: v.volume }, '*');
+      window.parent.postMessage(
+        { __moyu: true, type: 'STATE', muted: v.muted, volume: v.volume, currentTime: v.currentTime },
+        '*'
+      );
     } catch (e) {}
   }
   function syncPlayUI() { btnPlay.textContent = v.paused ? '▶' : '⏸'; }
@@ -101,6 +107,13 @@
   });
   v.addEventListener('loadeddata', function () {
     const m = stage.querySelector('.msg'); if (m) m.remove();
+    // 续播到指定位置（只跳一次）
+    if (startAt > 0 && isFinite(v.duration) && startAt < v.duration) {
+      try { v.currentTime = startAt; } catch (e) {}
+    }
+    startAt = 0;
+    // 恢复声音：muted 起播保证能自动播，加载后若期望非静音再取消静音（此时页面已有交互）
+    if (!wantMuted) v.muted = false;
     syncPlayUI(); syncVolUI();
   });
   v.addEventListener('play', syncPlayUI);
@@ -111,9 +124,13 @@
   });
 
   let dragging = false;
+  let lastReport = 0;
   v.addEventListener('timeupdate', function () {
     if (!dragging && v.duration) prog.value = String(Math.round((v.currentTime / v.duration) * 1000));
     time.textContent = fmt(v.currentTime) + ' / ' + fmt(v.duration || 0);
+    // 节流上报进度给 content（约每秒），供重选位置/刷新恢复续播
+    const now = performance.now();
+    if (now - lastReport > 1000) { lastReport = now; postState(); }
   });
 
   // ---------- 控制条交互 ----------
